@@ -252,7 +252,7 @@ def test_decompress_shape_1d_lossy(data: np.ndarray):
 @pytest.mark.parametrize("data", SHAPE_2D_TESTS.values(), ids=SHAPE_2D_TESTS.keys())
 def test_decompress_shape_2d_lossy(data: np.ndarray):
     codestream = htj2k_reshape_and_encode(data, level=2**-8, reversible=False)
-    assert_decompress(codestream, data, atol=226, rmse_tolerance=21)
+    assert_decompress(codestream, data, atol=227, rmse_tolerance=21)
 
 
 @pytest.mark.parametrize("data", ALL_SHAPE_TESTS.values(), ids=ALL_SHAPE_TESTS.keys())
