@@ -1,0 +1,68 @@
+[workspace]
+name = "h5z-htj2k"
+version = "1.0.0"
+channels = ["conda-forge"]
+platforms = ["win-64", "linux-64", "osx-arm64"]
+
+[tasks.configure]
+args = [
+  { "arg" = "extra_args", "default" = "" }
+]
+cmd = "cmake -G Ninja -B build -S . -DCMAKE_EXPORT_COMPILE_COMMANDS=ON -DCMAKE_BUILD_TYPE=Release {{ extra_args }}"
+
+[tasks.build]
+args = [
+  { "arg" = "extra_args", "default" = "" }
+]
+cmd = "cmake --build build"
+depends-on = [
+  { task = "configure", args = ["{{ extra_args }}"] }
+]
+
+[tasks.distclean]
+cmd = "rm -rf build/"
+
+[tasks.test]
+cmd = "HDF5_PLUGIN_PATH=$(realpath build/) pytest tests -v"
+default-environment = "test"
+depends-on = [
+  { task = "build" }
+]
+
+[tasks.test-py]
+cmd = "pytest tests -v --use-python-filter"
+default-environment = "test"
+
+[tasks.lint]
+cmd = "clang-format -i *.c *.cpp *.h && ruff format . && ruff check ."
+default-environment = "dev"
+
+[tasks.check]
+cmd = "clang-format --Werror --dry-run *.c *.cpp *.h && ruff format --check . && ruff check ."
+default-environment = "dev"
+
+[dependencies]
+cmake = ">=3.28"
+compilers = "*"
+hdf5 = "*"
+ninja = "*"
+# openjph = ">=0.3.1"
+pkg-config = "*"
+git = ">=2.55.0,<3"
+
+[feature.dev.dependencies]
+ruff = "*"
+clang-format = "*"
+
+[feature.test.dependencies]
+h5py = ">=3"
+imagecodecs = "*"
+numpy = "*"
+pooch = "*"
+pytest = "*"
+python = "*"
+
+[environments]
+default = { features = [] }
+dev = { features = ["dev"] }
+test = { features = ["test"] }
