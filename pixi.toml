@@ -46,7 +46,7 @@ cmake = ">=3.28"
 compilers = "*"
 hdf5 = "*"
 ninja = "*"
-# openjph = ">=0.3.1"
+# openjph = ">=0.31.0"
 pkg-config = "*"
 git = ">=2.55.0,<3"
 
