@@ -23,7 +23,7 @@ depends-on = [
 cmd = "rm -rf build/"
 
 [tasks.test]
-cmd = "HDF5_PLUGIN_PATH=$(realpath build/) pytest tests -v"
+cmd = "HDF5_PLUGIN_PATH=$PIXI_PROJECT_ROOT/build pytest tests -v"
 default-environment = "test"
 depends-on = [
   { task = "build" }
