@@ -130,7 +130,7 @@ def _filter_callback(
     dtype = cd_values[CD_INDEX_DTYPE] if cd_nelemts > CD_INDEX_DTYPE else 0
 
     if version > FILTER_VERSION:
-        print("Incompatible JPEG2000 filter version")
+        print("Incompatible JPEG2000 filter version", file=sys.stderr)
         return 0
 
     if flags & h5py.h5z.FLAG_REVERSE:  # Decompression
@@ -140,7 +140,7 @@ def _filter_callback(
         if dtype != 0:
             dtype_str = dtype_cd_value_to_str(dtype)
             if dtype_str is None:
-                print(f"Unsupported dtype: {dtype}")
+                print(f"Unsupported dtype: {dtype}", file=sys.stderr)
                 return 0
             data = data.astype(dtype_str)
 
@@ -150,12 +150,14 @@ def _filter_callback(
 
     else:  # Compression
         if cd_nelemts < CD_NELMTS_COMPRESS_REQUIRED:
-            print("Missing some cd_values for compression")
+            print("Missing some cd_values for compression", file=sys.stderr)
             return 0
 
         dtype_str = dtype_cd_value_to_str(dtype)
         if dtype_str is None:
-            print(f"htj2k compression not implemented for dtype: {dtype}")
+            print(
+                f"htj2k compression not implemented for dtype: {dtype}", file=sys.stderr
+            )
             return 0
 
         width = cd_values[CD_INDEX_WIDTH]
@@ -203,25 +205,25 @@ def _set_local_callback(dcpl_id: int, type_id: int, space_id: int) -> int:
     elif len(dims_used) == 2:
         width, height = dims_used[1], dims_used[0]
     else:
-        print("Unsupported number of dimensions")
+        print("Unsupported number of dimensions", file=sys.stderr)
         return -1
 
     # Retrieve data type
     dclass = type_.get_class()
     if dclass != h5py.h5t.INTEGER:
-        print(f"Unsupported datatype class: {dclass}")
+        print(f"Unsupported datatype class: {dclass}", file=sys.stderr)
         return -1
 
     dorder = type_.get_order()
     native_order = h5py.h5t.ORDER_LE if sys.byteorder == "little" else h5py.h5t.ORDER_BE
     if dorder != native_order:
-        print(f"Unsupported datatype order: {dorder}")
+        print(f"Unsupported datatype order: {dorder}", file=sys.stderr)
         return -1
 
     dsize = type_.get_size()
     dtype = dtype_cd_value(type_.get_sign() == h5py.h5t.SGN_2, dsize)
     if dtype is None:
-        print(f"Unsupported datatype size; {dsize}")
+        print(f"Unsupported datatype size; {dsize}", file=sys.stderr)
         return -1
 
     cd_values = [0] * CD_NELMTS_COMPRESS_REQUIRED
@@ -232,7 +234,7 @@ def _set_local_callback(dcpl_id: int, type_id: int, space_id: int) -> int:
 
     result = _H5Pmodify_filter(dcpl_id, FILTER_ID, flags, len(cd_values), cd_values)
     if result < 0:
-        print("H5Pmodify_filter failed")
+        print("H5Pmodify_filter failed", file=sys.stderr)
         return -1
 
     return 1
