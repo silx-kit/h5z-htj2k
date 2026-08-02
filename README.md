@@ -8,7 +8,7 @@ This version of the compression filter supports:
 - Chunk shapes with at most 2 non-unity dimensions.
 
 This filter currently accepts no user parameter through HDF5 filter options `cd_values` and compresses data in a reversible way (lossless).
-To configure the compression, e.g., to save data in an irreversible way (lossy), compress chunks with a library supporting htj2k and use HDF5 direct chunk write (see [H5Dwrite_chunk](https://support.hdfgroup.org/documentation/hdf5/latest/group___h5_d.html)) to save them in a HDF5 dataset.
+To configure the compression, e.g., to save data in an irreversible way (lossy), compress chunks with a library supporting htj2k and use HDF5 direct chunk write (see [H5Dwrite_chunk](https://support.hdfgroup.org/documentation/hdf5/latest/group___h5_d.html)) to save them in a HDF5 dataset (see [`direct_chunk_write.py` sample code](./examples/direct_chunk_write.py)).
 
 The chunks contain a bare high-throughput jpeg2000 codestream.
 
@@ -64,9 +64,11 @@ make install
 
 Use `pixi` to build and test the filter:
 
-- Build and test filter: `pixi run test`
-- Build the filter as decode-only: `pixi run build "-DDECODE_ONLY=ON"`
+- Build the filter: `pixi run build`
+- Build and test the filter: `pixi run test`
 - Run tests with the Python implementation of the filter: `pixi run test-py`
+- Remove the build folder: `pixi run distclean`
+- Build the filter with some configuration options, e.g. `DECODE_ONLY`: `pixi run build "-DDECODE_ONLY=ON"`
 
 And to check code formatting and linting: `pixi run check`
 
