@@ -34,3 +34,59 @@ jobs:
           cache: true
       - run: pixi run test-py
       - run: pixi run test
+
+  test-bigendian:
+    name: test / s390x (big-endian, Debian)
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v7
+      - uses: uraimo/run-on-arch-action@v3
+        name: Build and test on s390x
+        with:
+          arch: s390x
+          distro: trixie
+          githubToken: ${{ github.token }}
+          install: |
+            apt-get update -q -y
+            apt-get install -q -y --no-install-recommends \
+              build-essential pkg-config ca-certificates cmake ninja-build \
+              python3-dev python3-pip python3-setuptools python3-wheel \
+              python3-numpy python3-h5py python3-h5py-serial python3-pytest \
+              python3-pil python3-pooch \
+              libhdf5-dev libtiff-dev
+          run: |
+            set -euo pipefail
+
+            HDF5_ROOT=/usr/lib/s390x-linux-gnu/hdf5/serial
+
+            # Debian's libopenjph-dev (0.21) is too old for imagecodecs
+            cmake -G Ninja -B /tmp/openjph-build -S vendored/OpenJPH \
+              -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=/usr/local \
+              -DOJPH_ENABLE_TIFF_SUPPORT=OFF -DOJPH_BUILD_TESTS=OFF \
+              -DOJPH_BUILD_EXECUTABLES=OFF -DOJPH_BUILD_STREAM_EXPAND=OFF \
+              -DOJPH_BUILD_FUZZER=OFF
+            cmake --build /tmp/openjph-build
+            cmake --install /tmp/openjph-build
+            ldconfig
+
+            # imagecodecs setup.py unconditionally touches a couple of
+            # extension keys it assumes are always present, even when
+            # IMAGECODECS_ONLY drops them, so stub out its distributor hook
+            # to skip that logic.
+            mkdir -p /tmp/ic-shim
+            cat > /tmp/ic-shim/imagecodecs_distributor_setup.py <<'PYEOF'
+            def customize_build(extensions, options):
+                options.pop("shared_utility_qualified_name", None)
+            PYEOF
+            export PIP_BREAK_SYSTEM_PACKAGES=1
+            pip3 install "cython>=3.1"
+            IMAGECODECS_ONLY=imcd,shared,htj2k,tiff PYTHONPATH=/tmp/ic-shim \
+              CPATH=/usr/local/include LIBRARY_PATH=/usr/local/lib \
+              pip3 install --no-build-isolation --no-deps --no-binary imagecodecs \
+                imagecodecs
+
+            cmake -G Ninja -B build -S . -DCMAKE_BUILD_TYPE=Release -DHDF5_ROOT="$HDF5_ROOT"
+            cmake --build build
+
+            HDF5_PLUGIN_PATH="$PWD/build" python3 -m pytest tests -v
