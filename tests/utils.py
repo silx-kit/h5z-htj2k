@@ -56,7 +56,9 @@ def _assert_filter_options(dataset: h5py.Dataset, data: np.ndarray):
     assert options is not None
     assert options[0] == htj2k_filter.FILTER_VERSION
     assert options[1] == htj2k_filter.dtype_cd_value(
-        is_signed=np.issubdtype(data.dtype, np.signedinteger), itemsize=data.itemsize
+        byteorder=data.dtype.byteorder,
+        is_signed=np.issubdtype(data.dtype, np.signedinteger),
+        itemsize=data.itemsize,
     )
 
     # Expected shape encoded in codestream

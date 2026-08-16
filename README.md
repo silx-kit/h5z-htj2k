@@ -21,11 +21,12 @@ This filter currently accepts no user-defined HDF5 filter options `cd_values`.
 However, HDF5 filter options `cd_values` are computed automatically and stored by the filter's `set_local` function when creating HDF5 datasets:
 
 - 0: Filter version = 1
-- 1: Data type: `(0x80 if is_signed else 0x00) | data_type_size_in_bytes`:
+- 1: Data type: `(0x0100 if is_bigendian else 0x0000) | (0x80 if is_signed else 0x00) | data_type_size_in_bytes`:
   | Size | Unsigned | Signed |
   |---|---|---|
-  | 1 byte | uint8: `0x01` | int8: `0x81` |
-  | 2 bytes | uint16: `0x02` | int16: `0x82` |
+  | 1 byte | uint8: `0x0001` | int8: `0x0081` |
+  | 2 bytes (Little Endian) | uint16: `0x0002` | int16: `0x0082` |
+  | 2 bytes (Big Endian) | uint16: `0x0102` | int16: `0x0182` |
 
   If set to `0x00` or missing, the decompression infers the data type size from the bitdepth stored in the jpeg2000 codestream.
   Other values are not supported by this filter.

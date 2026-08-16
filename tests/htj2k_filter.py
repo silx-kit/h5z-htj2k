@@ -9,7 +9,7 @@ Reference: https://github.com/h5py/h5py/blob/master/h5py/tests/test_h5z.py
 import ctypes
 import sys
 from ctypes import POINTER, c_char_p, c_int, c_int64, c_size_t, c_uint, c_void_p
-from typing import Sequence, cast
+from typing import Literal, Sequence, cast
 
 import h5py
 import imagecodecs
@@ -36,11 +36,18 @@ CD_INDEX_NCOMPS = 4
 CD_NELMTS_COMPRESS_REQUIRED = 5
 
 
-def dtype_cd_value(is_signed: bool, itemsize: int) -> int | None:
-    """Equivalent of H5Z_HTJ2K_DTYPE(is_signed, nbytes)"""
+def dtype_cd_value(
+    byteorder: Literal["<", ">", "="],
+    is_signed: bool,
+    itemsize: int,
+) -> int | None:
+    """Equivalent of H5Z_HTJ2K_DTYPE_WITH_ENDIANNESS(order, is_signed, nbytes)"""
     if itemsize not in (1, 2):
         return None
-    return (0x80 if is_signed else 0x00) | itemsize
+    if byteorder == "=":
+        byteorder = "<" if sys.byteorder == "little" else ">"
+    endianness_bit = 0x0100 if itemsize > 1 and byteorder == ">" else 0x000
+    return endianness_bit | (0x80 if is_signed else 0x00) | itemsize
 
 
 def dtype_cd_value_to_str(dtype_cd_value: int) -> str | None:
@@ -234,7 +241,11 @@ def _set_local_callback(dcpl_id: int, type_id: int, space_id: int) -> int:
         return -1
 
     dsize = type_.get_size()
-    dtype = dtype_cd_value(type_.get_sign() == h5py.h5t.SGN_2, dsize)
+    dtype = dtype_cd_value(
+        "<" if dorder == h5py.h5t.ORDER_LE else ">",
+        type_.get_sign() == h5py.h5t.SGN_2,
+        dsize,
+    )
     if dtype is None:
         print(f"Unsupported datatype size; {dsize}", file=sys.stderr)
         return -1

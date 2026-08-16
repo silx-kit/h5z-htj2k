@@ -22,6 +22,24 @@
 #define CD_INDEX_NCOMPS 4
 #define CD_NELMTS_COMPRESS_REQUIRED 5
 
+#if defined(_MSC_VER)
+#define NATIVE_ORDER H5T_ORDER_LE
+#elif defined(__BYTE_ORDER__) && __BYTE_ORDER__ == __ORDER_BIG_ENDIAN__
+#define NATIVE_ORDER H5T_ORDER_BE
+#else
+#define NATIVE_ORDER H5T_ORDER_LE
+#endif
+
+#define H5Z_HTJ2K_DTYPE_WITH_ENDIANNESS(order, is_signed, nbytes)              \
+  (((order) == H5T_ORDER_BE ? 0x0100 : 0x0000) |                               \
+   H5Z_HTJ2K_DTYPE(is_signed, nbytes))
+#define H5Z_HTJ2K_DTYPE_WITHOUT_ENDIANNESS(dtype_with_endianness)              \
+  ((dtype_with_endianness) & 0x00FF)
+#define H5Z_HTJ2K_DTYPE_ORDER(dtype_with_endianness)                           \
+  (H5Z_HTJ2K_DTYPE_NBYTES(dtype_with_endianness) == 1 ? H5T_ORDER_NONE         \
+   : (dtype_with_endianness) & 0x0100                 ? H5T_ORDER_BE           \
+                                                      : H5T_ORDER_LE)
+
 static herr_t set_local_htj2k(hid_t dcpl, hid_t type, hid_t space);
 static size_t filter_htj2k(unsigned int flags, size_t cd_nelmts,
                            const unsigned int cd_values[], size_t nbytes,
@@ -163,7 +181,7 @@ static herr_t set_local_htj2k(hid_t dcpl, hid_t type, hid_t space) {
     return -1;
   }
 
-  dtype = H5Z_HTJ2K_DTYPE(sign == H5T_SGN_2, dsize);
+  dtype = H5Z_HTJ2K_DTYPE_WITH_ENDIANNESS(order, sign == H5T_SGN_2, dsize);
   cd_values[CD_INDEX_DTYPE] = dtype;
 
   result =
@@ -217,8 +235,11 @@ static size_t filter_htj2k(unsigned int flags, size_t cd_nelmts,
   void *input_buffer = *buf;
   unsigned int version =
       cd_nelmts > CD_INDEX_VERSION ? cd_values[CD_INDEX_VERSION] : 0;
-  unsigned int dtype = cd_nelmts > CD_INDEX_DTYPE ? cd_values[CD_INDEX_DTYPE]
-                                                  : H5Z_HTJ2K_DTYPE_NONE;
+  unsigned int dtype_with_endianness = cd_nelmts > CD_INDEX_DTYPE
+                                           ? cd_values[CD_INDEX_DTYPE]
+                                           : H5Z_HTJ2K_DTYPE_NONE;
+  unsigned int dtype =
+      H5Z_HTJ2K_DTYPE_WITHOUT_ENDIANNESS(dtype_with_endianness);
 
   if (version > H5Z_HTJ2K_VERSION) {
     fprintf(stderr, "Incompatible HTJ2K filter version\n");
@@ -241,6 +262,19 @@ static size_t filter_htj2k(unsigned int flags, size_t cd_nelmts,
         free(output_buffer);
       }
       return 0;
+    }
+
+    /* Decompressed data is always in native byte order.
+       If the data type is not in native byte order,
+       we need to swap the bytes since hdf5 does not expect that. */
+    H5T_order_t dtype_order = H5Z_HTJ2K_DTYPE_ORDER(dtype_with_endianness);
+    if (dtype_order != H5T_ORDER_NONE && dtype_order != NATIVE_ORDER) {
+      size_t nelemts = output_size / H5Z_HTJ2K_DTYPE_NBYTES(dtype);
+      uint16_t *data = (uint16_t *)output_buffer;
+      for (size_t i = 0; i < nelemts; i++) {
+        uint16_t v = data[i];
+        data[i] = (uint16_t)((v << 8) | (v >> 8));
+      }
     }
 
   } else { /** Compress data **/
