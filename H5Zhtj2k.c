@@ -12,7 +12,7 @@
 #include <string.h>
 #include <sys/types.h>
 
-#define H5Z_HTJ2K_FILTER_ID 65000
+#define H5Z_HTJ2K_FILTER_ID 32033
 #define H5Z_HTJ2K_VERSION 1
 
 #define CD_INDEX_VERSION 0

@@ -5,7 +5,7 @@ import imagecodecs
 import numpy as np
 from numpy.typing import ArrayLike
 
-FILTER_ID = 65000
+FILTER_ID = 32033
 
 
 def save_htj2k_dataset(

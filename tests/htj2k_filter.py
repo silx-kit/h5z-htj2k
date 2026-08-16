@@ -24,7 +24,7 @@ __all__ = [
 ]
 
 
-FILTER_ID = 65000
+FILTER_ID = 32033
 FILTER_VERSION = 1
 
 # cd_values layout from H5Zhtj2k.c
