@@ -56,15 +56,14 @@ bool resolve_output_dtype(ojph::ui32 precision, bool is_signed,
 
 } // namespace
 
-extern "C" int
-h5z_htj2k_backend_compress(size_t input_nbytes, void *input_buffer,
-                           unsigned int width, unsigned int height,
-                           unsigned int dtype, int num_threads,
-                           size_t *output_nbytes, void **output_buffer) {
+extern "C" int h5z_htj2k_backend_compress(
+    size_t input_nbytes, void *input_buffer, unsigned int width,
+    unsigned int height, unsigned int ncomps, unsigned int dtype,
+    int num_threads, size_t *output_nbytes, void **output_buffer) {
   (void)num_threads; /* OpenJPH's core codec is single-threaded */
 
   if (!input_buffer || !output_nbytes || !output_buffer || width == 0 ||
-      height == 0) {
+      height == 0 || ncomps == 0) {
     return -1;
   }
   *output_nbytes = 0;
@@ -76,7 +75,8 @@ h5z_htj2k_backend_compress(size_t input_nbytes, void *input_buffer,
     return -1;
   }
 
-  const size_t expected = static_cast<size_t>(width) * height * di.size;
+  const size_t expected =
+      static_cast<size_t>(width) * height * ncomps * di.size;
   if (input_nbytes != expected) {
     fprintf(stderr, "[h5z-htj2k/OpenJPH] input_nbytes mismatch: %zu != %zu\n",
             input_nbytes, expected);
@@ -88,8 +88,9 @@ h5z_htj2k_backend_compress(size_t input_nbytes, void *input_buffer,
 
     ojph::param_siz siz = codestream.access_siz();
     siz.set_image_extent(ojph::point(width, height));
-    siz.set_num_components(1);
-    siz.set_component(0, ojph::point(1, 1), di.precision, di.is_signed);
+    siz.set_num_components(ncomps);
+    for (unsigned int c = 0; c < ncomps; c++)
+      siz.set_component(c, ojph::point(1, 1), di.precision, di.is_signed);
     siz.set_image_offset(ojph::point(0, 0));
     siz.set_tile_size(ojph::size(0, 0));
     siz.set_tile_offset(ojph::point(0, 0));
@@ -111,36 +112,39 @@ h5z_htj2k_backend_compress(size_t input_nbytes, void *input_buffer,
     ojph::line_buf *cur_line = codestream.exchange(nullptr, next_comp);
 
     for (unsigned int y = 0; y < height; y++) {
-      ojph::si32 *dst = cur_line->i32;
-      switch (di.size) {
-      case 1:
-        if (di.is_signed) {
-          const int8_t *src = static_cast<const int8_t *>(input_buffer) +
-                              (static_cast<size_t>(y) * width);
-          for (unsigned int x = 0; x < width; x++)
-            dst[x] = src[static_cast<size_t>(x)];
-        } else {
-          const uint8_t *src = static_cast<const uint8_t *>(input_buffer) +
-                               (static_cast<size_t>(y) * width);
-          for (unsigned int x = 0; x < width; x++)
-            dst[x] = src[static_cast<size_t>(x)];
+      for (unsigned int c = 0; c < ncomps; c++) {
+        ojph::si32 *dst = cur_line->i32;
+        const size_t row_offset = (static_cast<size_t>(y) * width) * ncomps + c;
+        switch (di.size) {
+        case 1:
+          if (di.is_signed) {
+            const int8_t *src =
+                static_cast<const int8_t *>(input_buffer) + row_offset;
+            for (unsigned int x = 0; x < width; x++)
+              dst[x] = src[static_cast<size_t>(x) * ncomps];
+          } else {
+            const uint8_t *src =
+                static_cast<const uint8_t *>(input_buffer) + row_offset;
+            for (unsigned int x = 0; x < width; x++)
+              dst[x] = src[static_cast<size_t>(x) * ncomps];
+          }
+          break;
+        case 2:
+          if (di.is_signed) {
+            const int16_t *src =
+                static_cast<const int16_t *>(input_buffer) + row_offset;
+            for (unsigned int x = 0; x < width; x++)
+              dst[x] = src[static_cast<size_t>(x) * ncomps];
+          } else {
+            const uint16_t *src =
+                static_cast<const uint16_t *>(input_buffer) + row_offset;
+            for (unsigned int x = 0; x < width; x++)
+              dst[x] = src[static_cast<size_t>(x) * ncomps];
+          }
+          break;
         }
-        break;
-      case 2:
-        if (di.is_signed) {
-          const int16_t *src = static_cast<const int16_t *>(input_buffer) +
-                               (static_cast<size_t>(y) * width);
-          for (unsigned int x = 0; x < width; x++)
-            dst[x] = src[static_cast<size_t>(x)];
-        } else {
-          const uint16_t *src = static_cast<const uint16_t *>(input_buffer) +
-                                (static_cast<size_t>(y) * width);
-          for (unsigned int x = 0; x < width; x++)
-            dst[x] = src[static_cast<size_t>(x)];
-        }
-        break;
+        cur_line = codestream.exchange(cur_line, next_comp);
       }
-      cur_line = codestream.exchange(cur_line, next_comp);
     }
 
     codestream.flush();

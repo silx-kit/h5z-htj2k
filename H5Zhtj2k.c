@@ -19,7 +19,8 @@
 #define CD_INDEX_DTYPE 1
 #define CD_INDEX_WIDTH 2
 #define CD_INDEX_HEIGHT 3
-#define CD_NELMTS_COMPRESS_REQUIRED 4
+#define CD_INDEX_NCOMPS 4
+#define CD_NELMTS_COMPRESS_REQUIRED 5
 
 static herr_t set_local_htj2k(hid_t dcpl, hid_t type, hid_t space);
 static size_t filter_htj2k(unsigned int flags, size_t cd_nelmts,
@@ -90,17 +91,30 @@ static herr_t set_local_htj2k(hid_t dcpl, hid_t type, hid_t space) {
   if (ndims_used == 0) {
     cd_values[CD_INDEX_WIDTH] = 1;
     cd_values[CD_INDEX_HEIGHT] = 1;
+    cd_values[CD_INDEX_NCOMPS] = 1;
   } else if (ndims_used == 1) {
     if (dims[ndims - 1] <= 1) {
       cd_values[CD_INDEX_WIDTH] = 1;
       cd_values[CD_INDEX_HEIGHT] = dims_used[0];
+      cd_values[CD_INDEX_NCOMPS] = 1;
     } else {
       cd_values[CD_INDEX_WIDTH] = dims_used[0];
       cd_values[CD_INDEX_HEIGHT] = 1;
+      cd_values[CD_INDEX_NCOMPS] = 1;
     }
   } else if (ndims_used == 2) {
     cd_values[CD_INDEX_WIDTH] = dims_used[1];
     cd_values[CD_INDEX_HEIGHT] = dims_used[0];
+    cd_values[CD_INDEX_NCOMPS] = 1;
+  } else if (ndims_used == 3) {
+    if (dims_used[2] != 3) {
+      fprintf(stderr, "For chunks with 3 non-unity dimensions, the last "
+                      "dimension must be equal to 3\n");
+      return -1;
+    }
+    cd_values[CD_INDEX_WIDTH] = dims_used[1];
+    cd_values[CD_INDEX_HEIGHT] = dims_used[0];
+    cd_values[CD_INDEX_NCOMPS] = dims_used[2];
   } else {
     fprintf(stderr, "Unsupported number of dimensions\n");
     return -1;
@@ -241,8 +255,8 @@ static size_t filter_htj2k(unsigned int flags, size_t cd_nelmts,
 
     result = h5z_htj2k_backend_compress(
         nbytes, input_buffer, cd_values[CD_INDEX_WIDTH],
-        cd_values[CD_INDEX_HEIGHT], dtype, num_threads, &output_size,
-        &output_buffer);
+        cd_values[CD_INDEX_HEIGHT], cd_values[CD_INDEX_NCOMPS], dtype,
+        num_threads, &output_size, &output_buffer);
     if (result < 0) {
       fprintf(stderr, "compress failed\n");
       if (output_buffer) {

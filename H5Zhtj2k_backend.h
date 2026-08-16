@@ -30,6 +30,7 @@ typedef enum {
  * samples)
  * @param width              image width in pixels
  * @param height             image height in pixels
+ * @param ncomps             number of components
  * @param dtype              sample type, one of H5Z_HTJ2K_DTYPE_t
  * (unsigned int)
  * @param num_threads        number of threads
@@ -41,8 +42,9 @@ typedef enum {
  */
 int h5z_htj2k_backend_compress(size_t input_nbytes, void *input_buffer,
                                unsigned int width, unsigned int height,
-                               unsigned int dtype, int num_threads,
-                               size_t *output_nbytes, void **output_buffer);
+                               unsigned int ncomps, unsigned int dtype,
+                               int num_threads, size_t *output_nbytes,
+                               void **output_buffer);
 
 /**
  * h5z_htj2k_backend_decompress() – decode a HTJ2K codestream from memory.

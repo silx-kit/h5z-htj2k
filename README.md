@@ -32,6 +32,7 @@ However, HDF5 filter options `cd_values` are computed automatically and stored b
 
 - 2: Width
 - 3: Height
+- 4: Number of components (1 or 3)
 
 For decompression, the first 2 `cd_values` only are used to retrieve the dataset's data type size.
 Signedness and dimensions are retrieved from the jpeg2000 codestream.
