@@ -62,7 +62,13 @@ def _assert_filter_options(dataset: h5py.Dataset, data: np.ndarray):
     # Expected shape encoded in codestream
     j2k_shape = _reshape_unity_dimensions(data).shape
     assert options[2] == j2k_shape[1], f"{options[2]} != {j2k_shape[1]}"  # Width
-    assert options[3] == j2k_shape[0], f"{options[3]} != {j2k_shape[0]}"  # height
+    assert options[3] == j2k_shape[0], f"{options[3]} != {j2k_shape[0]}"  # Height
+    if len(j2k_shape) == 3:
+        assert options[4] == j2k_shape[2], (
+            f"{options[4]} != {j2k_shape[2]}"
+        )  # N components
+    else:
+        assert options[4] == 1
 
 
 def assert_compress(

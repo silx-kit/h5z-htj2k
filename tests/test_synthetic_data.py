@@ -110,6 +110,61 @@ def test_roundtrip_bitdepth(signed: bool, bitdepth: int):
     assert_roundtrip(data)
 
 
+@pytest.mark.parametrize("dtype", ["int8", "int16", "uint8", "uint16"])
+def test_compress_3_components(dtype: str):
+    """Test compress image with 3 components
+
+    Compress data with the filter, reads with direct chunk access and decompress with imagecodecs
+    """
+    signed = np.issubdtype(dtype, np.signedinteger)
+    bitdepth = np.dtype(dtype).itemsize
+    data = np.transpose(
+        [
+            make_bitdepth_test_image(bitdepth, signed=signed, lsb_bits=1, seed=0),
+            make_bitdepth_test_image(bitdepth, signed=signed, lsb_bits=1, seed=1),
+            make_bitdepth_test_image(bitdepth, signed=signed, lsb_bits=1, seed=2),
+        ],
+        axes=(1, 2, 0),
+    )
+    assert_compress(data)
+
+
+@pytest.mark.parametrize("dtype", ["int8", "int16", "uint8", "uint16"])
+def test_decompress_3_components(dtype: str):
+    """Test decompress image with 3 components
+
+    Compress data with imagecodecs, save it with direct chunk write and read-back through filter
+    """
+    signed = np.issubdtype(dtype, np.signedinteger)
+    bitdepth = np.dtype(dtype).itemsize
+    data = np.transpose(
+        [
+            make_bitdepth_test_image(bitdepth, signed=signed, lsb_bits=1, seed=0),
+            make_bitdepth_test_image(bitdepth, signed=signed, lsb_bits=1, seed=1),
+            make_bitdepth_test_image(bitdepth, signed=signed, lsb_bits=1, seed=2),
+        ],
+        axes=(1, 2, 0),
+    )
+    codestream = imagecodecs.htj2k_encode(data, planar=False, reversible=True)
+    assert_decompress(codestream, data)
+
+
+@pytest.mark.parametrize("dtype", ["int8", "int16", "uint8", "uint16"])
+def test_roundtrip_3_components(dtype: str):
+    """Test roundtrip image with 3 components"""
+    signed = np.issubdtype(dtype, np.signedinteger)
+    bitdepth = np.dtype(dtype).itemsize
+    data = np.transpose(
+        [
+            make_bitdepth_test_image(bitdepth, signed=signed, lsb_bits=1, seed=0),
+            make_bitdepth_test_image(bitdepth, signed=signed, lsb_bits=1, seed=1),
+            make_bitdepth_test_image(bitdepth, signed=signed, lsb_bits=1, seed=2),
+        ],
+        axes=(1, 2, 0),
+    )
+    assert_roundtrip(data)
+
+
 def test_none_native_endianness():
     native_data = np.arange(200, dtype=np.int16).reshape(10, 20)
 

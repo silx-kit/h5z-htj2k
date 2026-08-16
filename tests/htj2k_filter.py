@@ -32,7 +32,8 @@ CD_INDEX_VERSION = 0
 CD_INDEX_DTYPE = 1
 CD_INDEX_WIDTH = 2
 CD_INDEX_HEIGHT = 3
-CD_NELMTS_COMPRESS_REQUIRED = 4
+CD_INDEX_NCOMPS = 4
+CD_NELMTS_COMPRESS_REQUIRED = 5
 
 
 def dtype_cd_value(is_signed: bool, itemsize: int) -> int | None:
@@ -162,7 +163,11 @@ def _filter_callback(
 
         width = cd_values[CD_INDEX_WIDTH]
         height = cd_values[CD_INDEX_HEIGHT]
-        shape = height, width
+        ncomps = cd_values[CD_INDEX_NCOMPS]
+        if ncomps == 1:
+            shape = height, width
+        else:
+            shape = height, width, ncomps
         data = np.frombuffer(
             ctypes.string_at(buf[0], buf_size[0]), dtype=dtype_str
         ).reshape(shape)
@@ -196,14 +201,22 @@ def _set_local_callback(dcpl_id: int, type_id: int, space_id: int) -> int:
     dims_used = [d for d in dims if d > 1]
 
     if len(dims_used) == 0:
-        width, height = 1, 1
+        width, height, ncomps = 1, 1, 1
     elif len(dims_used) == 1:
         if dims[-1] <= 1:
-            width, height = 1, dims_used[0]
+            width, height, ncomps = 1, dims_used[0], 1
         else:
-            width, height = dims_used[0], 1
+            width, height, ncomps = dims_used[0], 1, 1
     elif len(dims_used) == 2:
-        width, height = dims_used[1], dims_used[0]
+        width, height, ncomps = dims_used[1], dims_used[0], 1
+    elif len(dims_used) == 3:
+        if dims_used[2] != 3:
+            print(
+                "For chunks with 3 non-unity dimensions, the last dimension must be equal to 3",
+                file=sys.stderr,
+            )
+            return -1
+        width, height, ncomps = dims_used[1], dims_used[0], dims_used[2]
     else:
         print("Unsupported number of dimensions", file=sys.stderr)
         return -1
@@ -231,6 +244,7 @@ def _set_local_callback(dcpl_id: int, type_id: int, space_id: int) -> int:
     cd_values[CD_INDEX_DTYPE] = dtype
     cd_values[CD_INDEX_WIDTH] = width
     cd_values[CD_INDEX_HEIGHT] = height
+    cd_values[CD_INDEX_NCOMPS] = ncomps
 
     result = _H5Pmodify_filter(dcpl_id, FILTER_ID, flags, len(cd_values), cd_values)
     if result < 0:
