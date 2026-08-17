@@ -61,6 +61,10 @@ def dtype_cd_value_to_str(dtype_cd_value: int) -> str | None:
     return f"{sign}int{itemsize * 8}"
 
 
+def _dtype_byteorder(dtype_cd_value: int) -> Literal["<", ">"]:
+    return ">" if dtype_cd_value & 0x0100 else "<"
+
+
 _H5ZFuncT = ctypes.CFUNCTYPE(
     c_size_t,  # restype
     # argtypes
@@ -151,6 +155,9 @@ def _filter_callback(
                 print(f"Unsupported dtype: {dtype}", file=sys.stderr)
                 return 0
             data = data.astype(dtype_str)
+
+        if data.itemsize > 1 and _dtype_byteorder(dtype) != data.dtype.str[0]:
+            data.byteswap(inplace=True)
 
         ouput_buffer_size = data.nbytes
         output_buffer = c_void_p(_libhdf5.H5allocate_memory(ouput_buffer_size, False))
