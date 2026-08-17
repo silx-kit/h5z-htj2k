@@ -31,7 +31,7 @@
 #endif
 
 #define H5Z_HTJ2K_DTYPE_WITH_ENDIANNESS(order, is_signed, nbytes)              \
-  (((order) == H5T_ORDER_BE ? 0x0100 : 0x0000) |                               \
+  (((order) == H5T_ORDER_BE && nbytes > 1 ? 0x0100 : 0x0000) |                 \
    H5Z_HTJ2K_DTYPE(is_signed, nbytes))
 #define H5Z_HTJ2K_DTYPE_WITHOUT_ENDIANNESS(dtype_with_endianness)              \
   ((dtype_with_endianness) & 0x00FF)
