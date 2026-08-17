@@ -5,7 +5,8 @@ HDF5 filter plugin for [High-Throughput JPEG2000 compression](https://jpeg.org/j
 This version of the compression filter supports:
 
 - Array datasets of integer elements of type: signed or unsigned, 1 or 2 bytes wide (i.e., int8, uint8, int16, uint16).
-- Chunk shapes with at most 2 non-unity dimensions.
+- Chunk shapes with 1, 2 or 3 non-unity dimensions.
+  For chunks with 3 non-unity dimensions, the last non-unity dimension must be 3.
 
 This filter currently accepts no user parameter through HDF5 filter options `cd_values` and compresses data in a reversible way (lossless).
 To configure the compression, e.g., to save data in an irreversible way (lossy), compress chunks with a library supporting htj2k and use HDF5 direct chunk write (see [H5Dwrite_chunk](https://support.hdfgroup.org/documentation/hdf5/latest/group___h5_d.html)) to save them in a HDF5 dataset (see [`direct_chunk_write.py` sample code](./examples/direct_chunk_write.py)).
@@ -26,7 +27,7 @@ However, HDF5 filter options `cd_values` are computed automatically and stored b
   |---|---|---|
   | 1 byte | uint8: `0x0001` | int8: `0x0081` |
   | 2 bytes (Little Endian) | uint16: `0x0002` | int16: `0x0082` |
-  | 2 bytes (Big Endian) | uint16: `0x0102` | int16: `0x0182` |
+  | 2 bytes (Big Endian ) | uint16: `0x0102` | int16: `0x0182` |
 
   If set to `0x00` or missing, the decompression infers the data type size from the bitdepth stored in the jpeg2000 codestream.
   Other values are not supported by this filter.
