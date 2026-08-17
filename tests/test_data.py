@@ -2,12 +2,14 @@ from pathlib import Path
 
 import h5py
 import numpy as np
+import pytest
 
 DATA_PATH = (Path(__file__).parent / "data").resolve()
 
 
-def test_bamboo_hercules():
-    with h5py.File(DATA_PATH / "bamboo_hercules.h5") as h5f:
+@pytest.mark.parametrize("filename", ["bamboo_hercules.h5", "bamboo_hercules_be.h5"])
+def test_bamboo_hercules(filename: str):
+    with h5py.File(DATA_PATH / filename) as h5f:
         ref_data = h5f["raw"][()]
         decompressed_data = h5f["htj2k"][()]
         expected_rmse = h5f["htj2k"].attrs["RMSE"]
