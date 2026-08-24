@@ -7,6 +7,7 @@ import pytest
 DATA_PATH = (Path(__file__).parent / "data").resolve()
 
 
+@pytest.mark.decode_only
 @pytest.mark.parametrize("filename", ["bamboo_hercules.h5", "bamboo_hercules_be.h5"])
 def test_bamboo_hercules(filename: str):
     with h5py.File(DATA_PATH / filename) as h5f:

@@ -34,6 +34,8 @@ jobs:
           cache: true
       - run: pixi run test-py
       - run: pixi run test
+      - run: pixi run distclean
+      - run: pixi run test-decode-only
 
   test-bigendian:
     name: test / s390x (big-endian, Debian)
