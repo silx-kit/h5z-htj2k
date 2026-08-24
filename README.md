@@ -66,17 +66,9 @@ make
 make install
 ```
 
-## Development
+## Contributing
 
-Use `pixi` to build and test the filter:
-
-- Build the filter: `pixi run build`
-- Build and test the filter: `pixi run test`
-- Run tests with the Python implementation of the filter: `pixi run test-py`
-- Remove the build folder: `pixi run distclean`
-- Build the filter with some configuration options, e.g. `DECODE_ONLY`: `pixi run build "-DDECODE_ONLY=ON"`
-
-And to check code formatting and linting: `pixi run check`
+See [CONTRIBUTING.md](CONTRIBUTING.md) for how to set up a development environment, format and lint the code and run the test suite.
 
 ## License
 
