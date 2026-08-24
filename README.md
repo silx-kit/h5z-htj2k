@@ -1,6 +1,9 @@
 # h5z-htj2k
 
-HDF5 filter plugin for [High-Throughput JPEG2000 compression](https://jpeg.org/jpeg2000/htj2k.html) (a.k.a. htj2k).
+HDF5 filter plugin for [High-Throughput JPEG2000 compression](https://jpeg.org/jpeg2000/htj2k.html) (a.k.a. HTJ2K).
+
+HTJ2K is an addition to the JPEG 2000 family of International Standards developed by JPEG Committee (ISO/IEC JTC 1/SC 29/WG 1).
+It brings an order of magnitude increase in throughput to JPEG 2000 at the expense of slightly reduced coding efficiency.
 
 This version of the compression filter supports:
 
@@ -27,9 +30,9 @@ However, HDF5 filter options `cd_values` are computed automatically and stored b
   |---|---|---|
   | 1 byte | uint8: `0x0001` | int8: `0x0081` |
   | 2 bytes (Little Endian) | uint16: `0x0002` | int16: `0x0082` |
-  | 2 bytes (Big Endian ) | uint16: `0x0102` | int16: `0x0182` |
+  | 2 bytes (Big Endian) | uint16: `0x0102` | int16: `0x0182` |
 
-  If set to `0x00` or missing, the decompression infers the data type size from the bitdepth stored in the jpeg2000 codestream.
+  If set to `0x00` or missing, the decompression infers the data type size from the bitdepth stored in the jpeg2000 codestream and expects the HDF5 dataset to be little-endian.
   Other values are not supported by this filter.
 
 - 2: Width
@@ -74,6 +77,11 @@ Use `pixi` to build and test the filter:
 - Build the filter with some configuration options, e.g. `DECODE_ONLY`: `pixi run build "-DDECODE_ONLY=ON"`
 
 And to check code formatting and linting: `pixi run check`
+
+## License
+
+- This hdf5 compression filter plugin is available under the [MIT license](LICENSE).
+- It uses [OpenJPH](https://github.com/aous72/OpenJPH) which is available under the [BSD 2-Clause License](vendored/OpenJPH/LICENSE).
 
 ## Credits
 
