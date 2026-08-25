@@ -65,7 +65,7 @@ jobs:
             export PIP_BREAK_SYSTEM_PACKAGES=1
             pip3 install "pytest>=9"
             pip3 install --no-deps \
-              http://www.silx.org/pub/wheelhouse/imagecodecs-2026.8.16-cp312-abi3-linux_s390x.whl
+              http://www.silx.org/pub/wheelhouse/imagecodecs-2026.8.16-cp312-abi3-manylinux_2_39_s390x.whl
 
             cmake -G Ninja -B build -S . -DCMAKE_BUILD_TYPE=Release -DHDF5_ROOT="$HDF5_ROOT"
             cmake --build build
