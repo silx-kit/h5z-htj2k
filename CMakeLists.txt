@@ -94,13 +94,13 @@ endif()
 
 # ── Shared library (HDF5 plugin) ──────────────────────────────────────────────
 add_library(H5Z_htj2k SHARED
-  H5Zhtj2k.c
-  backend_openjph.cpp
+  src/H5Zhtj2k.c
+  src/backend_openjph.cpp
 )
 
 target_include_directories(H5Z_htj2k
   PRIVATE
-    ${CMAKE_CURRENT_SOURCE_DIR}
+    ${CMAKE_CURRENT_SOURCE_DIR}/src
     ${HDF5_INCLUDE_DIRS}
     ${_backend_include_dirs}
 )
@@ -124,7 +124,7 @@ set_target_properties(H5Z_htj2k PROPERTIES
 
 # ── Windows: export only the HDF5 plugin entry points ────────────────────────
 if(WIN32)
-  target_sources(H5Z_htj2k PRIVATE H5Zhtj2k.def)
+  target_sources(H5Z_htj2k PRIVATE src/H5Zhtj2k.def)
 endif()
 
 # ── Install ───────────────────────────────────────────────────────────────────

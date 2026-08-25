@@ -41,11 +41,11 @@ cmd = "pytest tests -v --use-python-filter"
 default-environment = "test"
 
 [tasks.lint]
-cmd = "clang-format -i *.c *.cpp *.h && ruff format . && ruff check ."
+cmd = "clang-format -i src/*.c src/*.cpp src/*.h && ruff format . && ruff check ."
 default-environment = "dev"
 
 [tasks.check]
-cmd = "clang-format --Werror --dry-run *.c *.cpp *.h && ruff format --check . && ruff check ."
+cmd = "clang-format --Werror --dry-run src/*.c src/*.cpp src/*.h && ruff format --check . && ruff check ."
 default-environment = "dev"
 
 [dependencies]
