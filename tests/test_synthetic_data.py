@@ -313,3 +313,19 @@ def test_decompress_shape_2d_lossy(data: np.ndarray):
 @pytest.mark.parametrize("data", ALL_SHAPE_TESTS.values(), ids=ALL_SHAPE_TESTS.keys())
 def test_roundtrip_shape(data: np.ndarray):
     assert_roundtrip(data)
+
+
+def test_decompress_16M():
+    data = make_bitdepth_test_image(
+        shape=(4096, 4096), bit_depth=16, signed=False, lsb_bits=2
+    )
+    codestream = imagecodecs.htj2k_encode(data, reversible=True)
+
+    assert_decompress(codestream, data)
+
+
+def test_roundtrip_16M():
+    data = make_bitdepth_test_image(
+        shape=(4096, 4096), bit_depth=16, signed=False, lsb_bits=2
+    )
+    assert_roundtrip(data)
