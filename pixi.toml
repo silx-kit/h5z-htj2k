@@ -67,7 +67,7 @@ imagecodecs = "*"
 numpy = "*"
 pillow = "*"
 pooch = "*"
-pytest = "*"
+pytest = ">=9"
 python = "*"
 
 [environments]
