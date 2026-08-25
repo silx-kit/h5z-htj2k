@@ -34,14 +34,6 @@ bool dtype_info(unsigned int dtype, DtypeInfo &info) {
   return true;
 }
 
-ojph::ui32 pick_num_decompositions(ojph::ui32 width, ojph::ui32 height) {
-  ojph::ui32 max_dim = width > height ? width : height;
-  ojph::ui32 levels = 0;
-  while ((max_dim >> (levels + 1)) >= 1 && levels < 5)
-    ++levels;
-  return levels;
-}
-
 /* dtype -> H5Z_HTJ2K_DTYPE_t for reconstructed samples, from
  * bit depth/signedness reported by the decoded codestream. */
 bool resolve_output_dtype(ojph::ui32 precision, bool is_signed,
@@ -96,7 +88,7 @@ extern "C" int h5z_htj2k_backend_compress(
     siz.set_tile_offset(ojph::point(0, 0));
 
     ojph::param_cod cod = codestream.access_cod();
-    cod.set_num_decomposition(pick_num_decompositions(width, height));
+    cod.set_num_decomposition(5);
     cod.set_block_dims(64, 64);
     cod.set_progression_order("RPCL");
     cod.set_color_transform(false); /* samples are not assumed to be RGB */
