@@ -54,7 +54,7 @@ jobs:
             apt-get install -q -y --no-install-recommends \
               build-essential pkg-config ca-certificates cmake ninja-build \
               python3-pip \
-              python3-numpy python3-h5py python3-h5py-serial \
+              python3-numpy python3-h5py python3-h5py-serial python3-pytest \
               python3-pil python3-pooch \
               libhdf5-dev libtiff-dev
           run: |
@@ -63,7 +63,6 @@ jobs:
             HDF5_ROOT=/usr/lib/s390x-linux-gnu/hdf5/serial
 
             export PIP_BREAK_SYSTEM_PACKAGES=1
-            pip3 install "pytest>=9"
             pip3 install --no-deps \
               http://www.silx.org/pub/wheelhouse/imagecodecs-2026.8.16-cp312-abi3-manylinux_2_39_s390x.whl
 
