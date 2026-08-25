@@ -172,15 +172,17 @@ extern "C" int h5z_htj2k_backend_decompress(unsigned int dtype, int num_threads,
                                             size_t compressed_nbytes,
                                             void *compressed_buffer,
                                             size_t *output_nbytes,
-                                            void **output_buffer) {
+                                            void **output_buffer,
+                                            unsigned int *output_dtype) {
   (void)num_threads; /* OpenJPH's core codec is single-threaded */
 
   if (!compressed_buffer || compressed_nbytes == 0 || !output_nbytes ||
-      !output_buffer) {
+      !output_buffer || !output_dtype) {
     return -1;
   }
   *output_nbytes = 0;
   *output_buffer = nullptr;
+  *output_dtype = H5Z_HTJ2K_DTYPE_NONE;
 
   void *out = nullptr;
   try {
@@ -288,6 +290,7 @@ extern "C" int h5z_htj2k_backend_decompress(unsigned int dtype, int num_threads,
 
     *output_buffer = out;
     *output_nbytes = total_bytes;
+    *output_dtype = out_dtype;
     return 0;
   } catch (const std::exception &e) {
     if (out) {

@@ -49,20 +49,24 @@ int h5z_htj2k_backend_compress(size_t input_nbytes, void *input_buffer,
 /**
  * h5z_htj2k_backend_decompress() – decode a HTJ2K codestream from memory.
  *
- * @param dtype              sample type, one of H5Z_HTJ2K_DTYPE_t
- * (unsigned int)
+ * @param dtype              sample type without endianness bit, one of
+ * H5Z_HTJ2K_DTYPE_t, use H5Z_HTJ2K_DTYPE_NONE to infer it from the
+ * codestream
  * @param num_threads        number of threads
  * @param compressed_nbytes  byte length of the input codestream
  * @param compressed_buffer  pointer to the input codestream
  * @param output_nbytes      [out] byte length of the allocated output buffer
  * @param output_buffer      [out] caller-owned output buffer (free() when
  * done)
+ * @param output_dtype       [out] Output sample type without endianness bit,
+ * one of H5Z_HTJ2K_DTYPE_t
  * @return 0 on success, -1 on failure
  */
 int h5z_htj2k_backend_decompress(unsigned int dtype, int num_threads,
                                  size_t compressed_nbytes,
                                  void *compressed_buffer, size_t *output_nbytes,
-                                 void **output_buffer);
+                                 void **output_buffer,
+                                 unsigned int *output_dtype);
 
 #ifdef __cplusplus
 }

@@ -254,10 +254,23 @@ static size_t filter_htj2k(unsigned int flags, size_t cd_nelmts,
       return 0;
     }
 
-    result = h5z_htj2k_backend_decompress(
-        dtype, num_threads, nbytes, input_buffer, &output_size, &output_buffer);
+    unsigned int output_dtype = H5Z_HTJ2K_DTYPE_NONE;
+    result = h5z_htj2k_backend_decompress(dtype, num_threads, nbytes,
+                                          input_buffer, &output_size,
+                                          &output_buffer, &output_dtype);
     if (result < 0) {
       fprintf(stderr, "decompress failed\n");
+      if (output_buffer) {
+        free(output_buffer);
+      }
+      return 0;
+    }
+
+    unsigned int effective_dtype =
+        dtype != H5Z_HTJ2K_DTYPE_NONE ? dtype : output_dtype;
+    size_t effective_nbytes = H5Z_HTJ2K_DTYPE_NBYTES(effective_dtype);
+    if (effective_nbytes != 1 && effective_nbytes != 2) {
+      fprintf(stderr, "decompress failed: unable to resolve data type\n");
       if (output_buffer) {
         free(output_buffer);
       }
@@ -267,9 +280,9 @@ static size_t filter_htj2k(unsigned int flags, size_t cd_nelmts,
     /* Decompressed data is always in native byte order.
        If the data type is not in native byte order,
        we need to swap the bytes since hdf5 does not expect that. */
-    H5T_order_t dtype_order = H5Z_HTJ2K_DTYPE_ORDER(dtype_with_endianness);
-    if (dtype_order != H5T_ORDER_NONE && dtype_order != NATIVE_ORDER) {
-      size_t nelemts = output_size / H5Z_HTJ2K_DTYPE_NBYTES(dtype);
+    if (effective_nbytes != 1 &&
+        H5Z_HTJ2K_DTYPE_ORDER(dtype_with_endianness) != NATIVE_ORDER) {
+      size_t nelemts = output_size / effective_nbytes;
       uint16_t *data = (uint16_t *)output_buffer;
       for (size_t i = 0; i < nelemts; i++) {
         uint16_t v = data[i];
