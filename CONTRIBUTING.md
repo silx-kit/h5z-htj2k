@@ -8,6 +8,8 @@ Install [`pixi`](https://pixi.sh) — it provisions the C/C++ toolchain, HDF5, a
 curl -fsSL https://pixi.sh/install.sh | bash
 ```
 
+From the root folder of this project, run: `pixi install --all --frozen`
+
 ## Build
 
 - `pixi run build` — configure (CMake+Ninja) and build the filter.
